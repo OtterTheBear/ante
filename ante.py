@@ -139,18 +139,21 @@ def main(args):
             k = stdscr.getch()
             (y, x) = c.getsyx()
             (maxy, maxx) = stdscr.getmaxyx()
+            # The method returns sizes not "maximum values"
+            maxy -= 1
+            maxx -= 1
 
-            # stdscr.addstr(c.keyname(k))
-            # stdscr.move(y, x)
+            stdscr.move(maxy, 0)
+            stdscr.addstr((c.keyname(k).decode("utf=8") + (" " * (maxx + 1)))[:maxx])
+            stdscr.move(y, x)
 
             if ascii.isprint(k):
-                remainder, strr = insert(strr, y, x, chr(k))
-                stdscr.addstr(y, x, remainder[:maxx - x + 1])
                 if x < maxx:
+                    remainder, strr = insert(strr, y, x, chr(k))
+                    stdscr.addstr(y, x, remainder[:maxx - x + 1])
                     stdscr.move(y, x + 1)
             # https://stackoverflow.com/questions/11067800/ncurses-key-enter-is-fail
             elif k in (c.KEY_ENTER, ascii.CR, ascii.LF):
-                strr += "\n"
                 if y < maxy:
                     stdscr.move(y + 1, 0)
             elif k == c.KEY_BACKSPACE:
@@ -162,7 +165,7 @@ def main(args):
                 if y > 0:
                     stdscr.move(y - 1, x)
             elif k == c.KEY_DOWN:
-                if y < maxy:
+                if y < maxy - 1:
                     stdscr.move(y + 1, x)
             elif k == c.KEY_LEFT:
                 if x > 0:
@@ -170,6 +173,10 @@ def main(args):
             elif k == c.KEY_RIGHT:
                 if x < maxx:
                     stdscr.move(y, x + 1)
+            elif k in (ascii.DEL, c.KEY_DC):
+                remainder, strr = delete(strr, y, x)
+                stdscr.addstr(y, x, (remainder + " ")[:maxx - x + 1])
+                stdscr.move(y, x)
             elif k == ascii.DC3:
                 with open(filename, "w") as txtfile:
                     txtfile.write(strr)
